@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check whether the app code exists yet
+        id: code
+        run: |
+          if [ -f package.json ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Docs-only stage
+        if: steps.code.outputs.present == 'false'
+        run: echo "No application code yet (pre-approval). Lint, test and build steps run once package.json exists."
+
+      - uses: pnpm/action-setup@v4
+        if: steps.code.outputs.present == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.code.outputs.present == 'true'
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install, lint, type-check, test, build
+        if: steps.code.outputs.present == 'true'
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm lint
+          pnpm typecheck
+          pnpm test
+          pnpm build
