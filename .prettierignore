@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+docs/**/*.pdf
+node_modules
+dist
+.next
+coverage
